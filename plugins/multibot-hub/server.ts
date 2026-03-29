@@ -287,6 +287,8 @@ function connectHub(): void {
     if (frame.type === 'message') {
       const msg = frame.data as HubMessage
       if (msg.bot_id === BOT_ID) return
+      // #general is client-boss only — don't forward to team members
+      if (msg.channel === 'general' && BOT_ID !== 'boss' && BOT_ID !== 'client') return
       if (MENTION_MODE === 'mention' && !msg.mentions.includes(BOT_ID)) return
 
       mcpLog('INFO', `ws:incoming #${msg.channel} from=${msg.bot_id} len=${msg.text.length}`)

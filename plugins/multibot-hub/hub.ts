@@ -300,6 +300,11 @@ async function handleAPI(req: Request, url: URL): Promise<Response> {
     if (body.channel.length > 64 || !/^[\w][\w-]*$/.test(body.channel)) {
       return jsonResponse({ error: 'invalid channel name (alphanumeric, dash, underscore, max 64)' }, 400)
     }
+    // #general is client-boss only — block team members
+    if (body.channel === 'general' && botId !== 'boss' && botId !== 'client' && botId !== 'system') {
+      hubLog('WARN', 'msg', `blocked ${botId} from posting to #general`)
+      return jsonResponse({ error: '#general is client-boss only' }, 403)
+    }
 
     const msg: HubMessage = {
       id: storage.generateMessageId(),

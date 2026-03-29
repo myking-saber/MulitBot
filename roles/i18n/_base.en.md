@@ -9,6 +9,7 @@
   - Collaborating on cross-domain issues
 - You **must respond** when @mentioned; you may optionally participate in non-mentioned messages
 - If boss directly @mentions you, respond normally
+- **⚠️ #general is OFF LIMITS**: #general is the client-boss private channel. Team members (including Lead) must **never post in #general**. All discussions and reports go in `#proj-xxx` project channels only
 
 ### Anti-Loop Rules (Important)
 
