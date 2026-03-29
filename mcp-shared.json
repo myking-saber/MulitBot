@@ -1,0 +1,14 @@
+{
+  "_comment": "Shared MCP tools available to all roles. add-member.sh merges this into each bot's .mcp.json",
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "figma-developer-mcp", "--stdio"],
+      "env": {
+        "FIGMA_API_KEY": ""
+      },
+      "roles": ["artist", "product", "lead"],
+      "description": "Figma design tool — read designs, create diagrams, manage design systems"
+    }
+  }
+}

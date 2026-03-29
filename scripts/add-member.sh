@@ -101,18 +101,25 @@ CLAUDE_MD="$BOT_DIR/CLAUDE.md"
 ROLE_NAME=$(awk '/^name:/{sub(/^name:[[:space:]]*/,""); print; exit}' "$CLAUDE_MD")
 MENTION_MODE=$(awk '/^mention_mode:/{sub(/^mention_mode:[[:space:]]*/,""); print; exit}' "$CLAUDE_MD")
 
-# 确保 .mcp.json
-if [ ! -f "$BOT_DIR/.mcp.json" ]; then
-    cat > "$BOT_DIR/.mcp.json" << MCPEOF
-{
-  "mcpServers": {
-    "multibot-hub": {
-      "command": "bun",
-      "args": ["run", "${PLUGIN_DIR}/server.ts"]
-    }
-  }
-}
-MCPEOF
+# 构建 .mcp.json = Hub MCP + 共享 MCP 技能
+SHARED_MCP="$PROJECT_DIR/mcp-shared.json"
+HUB_MCP="{\"multibot-hub\":{\"command\":\"bun\",\"args\":[\"run\",\"${PLUGIN_DIR}/server.ts\"]}}"
+
+if [ -f "$SHARED_MCP" ]; then
+    # 合并：Hub MCP + shared MCP 中配置了的服务（过滤掉没有 API key 等空配置的）
+    MERGED=$(jq --argjson hub "$HUB_MCP" '
+        { mcpServers: (.mcpServers | to_entries | map(
+            select(.value.env == null or (.value.env | to_entries | all(.value != "")))
+            | {key: .key, value: (.value | del(.roles, .description))}
+        ) | from_entries) } | .mcpServers += $hub
+    ' "$SHARED_MCP" 2>/dev/null)
+    if [ -n "$MERGED" ]; then
+        echo "{\"mcpServers\": $MERGED}" | jq '.' > "$BOT_DIR/.mcp.json"
+    else
+        echo "{\"mcpServers\": $HUB_MCP}" | jq '.' > "$BOT_DIR/.mcp.json"
+    fi
+else
+    echo "{\"mcpServers\": $HUB_MCP}" | jq '.' > "$BOT_DIR/.mcp.json"
 fi
 
 # 启动 Claude Code 在新 tmux 窗口

@@ -56,20 +56,29 @@ When the client wants a project:
 
 **Important: Don't manually edit team.json — add-member.sh maintains it automatically.**
 
-### Stopping/Interrupting a Project
+### Project Completion
+
+When a project is done, **always run team debrief before closing**:
+```bash
+bash scripts/debrief.sh <project-name>
+```
+This will:
+1. Ask each team member to summarize their experience
+2. Wait for all responses (up to 5 minutes)
+3. Generate `projects/<name>/workspace/retrospective.md`
+4. Auto-append to each role's `roles/<id>.experience.md`
+5. Export full project minutes
+
+Then tell the client in `#general` that the project is delivered and experience has been captured.
+
+### Interrupting a Project
 
 **⚠️ NEVER execute `bash scripts/stop.sh`! That kills Hub, yourself, and all processes.**
 
 Correct way to interrupt a project:
-1. Post in `#proj-<name>` to notify team to stop
-2. Tell client in `#general` that the project is interrupted
+1. Run debrief first (lessons from interrupted projects are valuable too): `bash scripts/debrief.sh <name>`
+2. Tell client in `#general` that the project is interrupted, experience saved
 3. Project data stays in `projects/` directory
-
-### Export Project Minutes on Completion
-
-```bash
-bash scripts/export-log.sh --project <name> -o projects/<name>/workspace/project-minutes.md
-```
 
 ## Team Assembly Rules (Mandatory)
 
