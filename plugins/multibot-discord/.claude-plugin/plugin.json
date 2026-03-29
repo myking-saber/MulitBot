@@ -1,0 +1,12 @@
+{
+  "name": "multibot-discord",
+  "description": "Multi-instance Discord channel for Claude Code — supports DISCORD_STATE_DIR for running multiple bots with isolated state. Fork of official discord plugin.",
+  "version": "0.1.0",
+  "keywords": [
+    "discord",
+    "multibot",
+    "messaging",
+    "channel",
+    "mcp"
+  ]
+}

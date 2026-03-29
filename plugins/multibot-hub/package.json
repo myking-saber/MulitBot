@@ -1,0 +1,12 @@
+{
+  "name": "multibot-hub",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "hub": "bun run hub.ts",
+    "dev": "bun run --watch hub.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

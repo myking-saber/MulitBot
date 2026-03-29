@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a2e">
+<title>MulitBot Hub</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Sidebar -->
+  <nav id="sidebar" class="hidden">
+    <div class="sidebar-header">
+      <h2>MulitBot</h2>
+      <button id="close-sidebar" class="icon-btn">&times;</button>
+    </div>
+    <div class="sidebar-section">
+      <h3 id="lbl-channels">Channels</h3>
+      <ul id="channel-list"></ul>
+    </div>
+    <div class="sidebar-section">
+      <h3 id="lbl-projects">Projects</h3>
+      <ul id="project-list"></ul>
+    </div>
+    <div class="sidebar-section">
+      <h3 id="lbl-bots">Members</h3>
+      <ul id="bot-list"></ul>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main>
+    <header id="header">
+      <button id="menu-btn" class="icon-btn">&#9776;</button>
+      <span id="channel-name">#general</span>
+      <button id="export-btn" class="icon-btn" title="Export" onclick="exportChannel()">&#128196;</button>
+      <button id="stop-btn" class="icon-btn hidden" title="Stop" onclick="stopProject()">&#9632;</button>
+      <button id="notif-btn" class="icon-btn" title="Notifications" onclick="enableNotifications()">&#128276;</button>
+      <span id="connection-status" class="status-dot"></span>
+    </header>
+
+    <div id="channel-tabs"></div>
+
+    <div id="messages"></div>
+
+    <footer id="input-bar">
+      <div id="mention-popup" class="hidden"></div>
+      <div class="input-row">
+        <input id="msg-input" type="text" autocomplete="off">
+        <button id="send-btn"></button>
+      </div>
+    </footer>
+  </main>
+</div>
+<script src="/lang.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

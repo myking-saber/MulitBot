@@ -1,0 +1,29 @@
+{
+  "project": "",
+  "lang": "en",
+  "hub": {
+    "port": 7800,
+    "secret": "",
+    "default_channel": "general"
+  },
+  "slots": [
+    {
+      "slot": 1,
+      "id": "lead",
+      "role": "member",
+      "soul": "lead"
+    },
+    {
+      "slot": 2,
+      "id": "product",
+      "role": "member",
+      "soul": "product"
+    },
+    {
+      "slot": 3,
+      "id": "architect",
+      "role": "member",
+      "soul": "architect"
+    }
+  ]
+}

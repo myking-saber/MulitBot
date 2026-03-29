@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "multibot-hub": {
+      "command": "bun",
+      "args": ["run", "./server.ts"],
+      "env": {}
+    }
+  }
+}

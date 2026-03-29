@@ -1,0 +1,20 @@
+# Data
+data/channels/
+data/logs/
+data/files/
+data/bots.json
+
+# Dependencies
+node_modules/
+
+# Claude Code
+.claude/
+*.experience.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.bak.*

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "multibot-hub": {
+      "command": "bun",
+      "args": ["run", "/home/zengjiancan/vmshare/workspace/MulitBot/plugins/multibot-hub/server.ts"]
+    }
+  }
+}

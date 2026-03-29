@@ -1,0 +1,5 @@
+{
+  "name": "multibot-hub",
+  "version": "0.1.0",
+  "description": "Self-hosted message hub for multi-bot collaboration. Replaces Discord with a local server + mobile Web UI."
+}
