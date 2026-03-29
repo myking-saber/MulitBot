@@ -106,20 +106,20 @@ SHARED_MCP="$PROJECT_DIR/mcp-shared.json"
 HUB_MCP="{\"multibot-hub\":{\"command\":\"bun\",\"args\":[\"run\",\"${PLUGIN_DIR}/server.ts\"]}}"
 
 if [ -f "$SHARED_MCP" ]; then
-    # 合并：Hub MCP + shared MCP 中配置了的服务（过滤掉没有 API key 等空配置的）
+    # 合并：Hub MCP + shared MCP（过滤掉没有 API key 的服务）
     MERGED=$(jq --argjson hub "$HUB_MCP" '
-        { mcpServers: (.mcpServers | to_entries | map(
+        .mcpServers | to_entries | map(
             select(.value.env == null or (.value.env | to_entries | all(.value != "")))
             | {key: .key, value: (.value | del(.roles, .description))}
-        ) | from_entries) } | .mcpServers += $hub
+        ) | from_entries + $hub
     ' "$SHARED_MCP" 2>/dev/null)
-    if [ -n "$MERGED" ]; then
-        echo "{\"mcpServers\": $MERGED}" | jq '.' > "$BOT_DIR/.mcp.json"
+    if [ -n "$MERGED" ] && echo "$MERGED" | jq -e '.' >/dev/null 2>&1; then
+        jq -n --argjson s "$MERGED" '{"mcpServers": $s}' > "$BOT_DIR/.mcp.json"
     else
-        echo "{\"mcpServers\": $HUB_MCP}" | jq '.' > "$BOT_DIR/.mcp.json"
+        jq -n --argjson s "$HUB_MCP" '{"mcpServers": $s}' > "$BOT_DIR/.mcp.json"
     fi
 else
-    echo "{\"mcpServers\": $HUB_MCP}" | jq '.' > "$BOT_DIR/.mcp.json"
+    jq -n --argjson s "$HUB_MCP" '{"mcpServers": $s}' > "$BOT_DIR/.mcp.json"
 fi
 
 # 启动 Claude Code 在新 tmux 窗口
