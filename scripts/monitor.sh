@@ -57,8 +57,18 @@ is_bot_idle() {
     local bot_id="$1"
     local pane_content
     pane_content=$(tmux capture-pane -t "$SESSION_NAME:$bot_id" -p -S -5 2>/dev/null || echo "")
-    # 检查是否有 ❯ 提示符且没有 "Do you want to proceed" 权限提示
-    if echo "$pane_content" | grep -q "❯" && ! echo "$pane_content" | grep -q "Do you want to proceed"; then
+
+    # 检测卡住状态：queued messages / Press up — 自动按 Enter 解除
+    if echo "$pane_content" | grep -qi "queued messages\|Press up"; then
+        mlog "WARN" "$bot_id stuck on queued messages, pressing Enter"
+        tmux send-keys -t "$SESSION_NAME:$bot_id" Enter 2>/dev/null
+        return 1  # 当作 busy，下一轮再检查
+    fi
+
+    # 检查是否有 ❯ 提示符且没有权限提示或正在处理
+    if echo "$pane_content" | grep -q "❯" \
+        && ! echo "$pane_content" | grep -q "Do you want to proceed" \
+        && ! echo "$pane_content" | grep -qi "Running\|Thinking\|Brewing\|Churning\|Canoodling\|Incubating\|Leavening\|Zigzagging\|Sautéed"; then
         return 0  # idle
     fi
     return 1  # busy
@@ -116,7 +126,10 @@ restart_bot() {
 }
 
 declare -A LAST_RESTART
-declare -A WAKE_TIME  # 记录唤醒时间，用于计算响应耗时
+declare -A WAKE_TIME      # 记录唤醒时间，用于计算响应耗时
+declare -A LAST_WAKE_TIME # 唤醒冷却：防止重复唤醒
+
+WAKE_COOLDOWN=30  # 同一 bot 30 秒内不重复唤醒
 
 # 唤醒 bot
 wake_bot() {
@@ -124,7 +137,19 @@ wake_bot() {
     local channel="$2"
     local msg_preview="$3"
 
-    # 广播 typing 事件到 Web UI（让客户看到 "xxx 正在处理..."）
+    # 冷却检查
+    local now=$(date +%s)
+    local last_wake="${LAST_WAKE_TIME[$bot_id]:-0}"
+    if (( now - last_wake < WAKE_COOLDOWN )); then
+        return 0  # 冷却中，跳过
+    fi
+
+    # 必须空闲才唤醒
+    if ! is_bot_idle "$bot_id"; then
+        return 0  # 忙碌中，跳过
+    fi
+
+    # 广播 typing 事件到 Web UI
     curl -sf -X POST "${HUB_URL}/api/typing" \
         -H 'Content-Type: application/json' \
         -d "{\"bot_id\":\"${bot_id}\",\"channel\":\"${channel}\"}" \
@@ -133,7 +158,8 @@ wake_bot() {
     local wake_msg="频道 #${channel} 有新消息 @你：${msg_preview}。请用 fetch_messages 工具检查 ${channel} 频道的最新消息并响应。"
 
     tmux send-keys -t "$SESSION_NAME:$bot_id" "$wake_msg" Enter 2>/dev/null
-    WAKE_TIME["$bot_id"]=$(date +%s)
+    WAKE_TIME["$bot_id"]=$now
+    LAST_WAKE_TIME["$bot_id"]=$now
     mlog "INFO" "唤醒 $bot_id ← #$channel: ${msg_preview:0:60}"
 }
 
@@ -253,10 +279,8 @@ while true; do
             fi
 
             if [ "$relevant" = true ]; then
-                # 检查 bot 是否空闲
-                if is_bot_idle "$bot_id"; then
-                    wake_bot "$bot_id" "$channel" "$msg_preview"
-                fi
+                # wake_bot 内部会检查冷却 + 空闲状态
+                wake_bot "$bot_id" "$channel" "$msg_preview"
             fi
 
             # 更新 last_seen 到最新消息
