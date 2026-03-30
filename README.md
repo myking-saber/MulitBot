@@ -70,10 +70,16 @@ Only **Boss + Hub + Monitor** start initially (1 Claude instance). Team members 
 
 ### Communication
 
-- **#general** — Client ↔ Boss only (private line)
+- **#general** — Client ↔ Boss only (private line, API enforces 403 for team members)
 - **#proj-xxx** — Team discussions per project (all roles can @mention each other)
-- **Monitor** — Auto-wakes idle bots, detects crashes, broadcasts typing indicators
-- **WebSocket** — Real-time message delivery
+- **Monitor** — Auto-wakes idle bots, detects crashes, unsticks queued messages, 30s wake cooldown
+- **WebSocket** — Real-time message delivery with 2-minute keepalive ping
+
+### Project Lifecycle
+
+- **Debrief on completion**: `debrief.sh` collects experience summaries from every team member → `retrospective.md` + role experience files
+- **MCP skill sharing**: `mcp-shared.json` defines available MCP tools (Figma, etc.) auto-merged into bot configs
+- **Performance tracking**: Response times and task durations logged automatically, viewable via `/api/perf`
 
 ### Role System
 
@@ -155,7 +161,9 @@ cat data/logs/mcp-architect-*.log
 | `monitor.sh` | Auto-wake + crash recovery daemon |
 | `wake.sh` | Manually wake specific bots |
 | `export-log.sh` | Export channel conversations to Markdown |
+| `debrief.sh` | Team retrospective — collect experience on project completion |
 | `worker.sh` | Dispatch tasks to temporary Claude processes |
+| `i18n.sh` | Script internationalization library (zh-CN/en/ja) |
 
 ## Configuration
 

@@ -177,6 +177,7 @@ workspace/team-knowledge/    workspace/team-knowledge/
 | `monitor.sh` | 消息监控 + 自动唤醒 + 崩溃恢复 |
 | `wake.sh` | 手动唤醒指定 Bot |
 | `export-log.sh` | 导出频道对话为 Markdown |
+| `debrief.sh` | 项目复盘 — 收集各角色经验总结 |
 | `i18n.sh` | 脚本多语言库 |
 
 ## 贡献

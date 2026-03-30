@@ -78,7 +78,10 @@ scripts/
   setup.sh                - 初始化 Bot 目录环境
   worker.sh               - 派发 Worker 任务
   i18n.sh                 - 脚本国际化库（zh-CN/en/ja），从系统 $LANG 或 team.json "lang" 字段自动检测语言
-  export-log.sh           - 日志导出工具
+  export-log.sh           - 频道对话导出为 Markdown 纪要
+  debrief.sh              - 项目复盘（收集各角色经验 → retrospective.md + experience 文件）
+
+mcp-shared.json             - 共享 MCP 技能配置（Figma 等），add-member.sh 自动合并到 bot 的 .mcp.json
 
 data/
   channels/               - 频道数据（每频道一个目录：meta.json + messages.jsonl）
@@ -181,9 +184,14 @@ bash scripts/add-member.sh "数据库专家，精通 PostgreSQL 和 Redis"
 每次调用自动：更新 team.json → 启动 Claude Code → 重启 Monitor → 频道通知。
 已在运行的角色会自动跳过，不会重复启动。
 
-### 7. 关闭项目
+### 7. 项目完成/关闭
 
-客户说"关闭项目" → Boss 执行 `stop.sh`，项目数据保留在 `projects/` 目录。
+项目完成时 Boss 先执行团队复盘 `debrief.sh`，收集每个角色的经验总结：
+- 生成 `projects/<名>/workspace/retrospective.md`（复盘报告）
+- 自动追加到各角色 `roles/<id>.experience.md`（跨项目经验）
+- 导出完整项目纪要
+
+客户说"中断项目"→ Boss 通知团队停止 + 复盘 + 汇报客户。**Boss 绝不执行 stop.sh（会杀掉自己）**。
 
 ## 通信系统（multibot-hub）
 
@@ -215,6 +223,8 @@ bash scripts/add-member.sh "数据库专家，精通 PostgreSQL 和 Redis"
 | POST | /api/typing | 广播 typing 指示器 |
 | POST | /api/files | 上传文件 |
 | GET | /api/files/:id | 下载文件 |
+| GET | /api/export/:channel | 导出频道对话为 Markdown |
+| GET | /api/perf | 查看今日性能数据（响应耗时、任务耗时） |
 
 ### 消息路由
 
@@ -241,7 +251,7 @@ bash scripts/add-member.sh "数据库专家，精通 PostgreSQL 和 Redis"
 | 局域网（手机查看） | `HUB_SECRET=xxx`，绑定 0.0.0.0 |
 | 公网远程 | `HUB_SECRET=xxx` + cloudflared 隧道 |
 
-防护措施：密钥认证、IP+bot_id 双重速率限制、WebSocket 10秒认证超时、文件路径穿越校验、CORS 头、频道名验证、#general 删除保护。
+防护措施：密钥认证、IP+bot_id 双重速率限制、WebSocket 10秒认证超时、文件路径穿越校验、CORS 头、频道名验证、#general 删除保护、#general 发消息权限控制（仅 boss/client 可发，团队成员 403）。
 
 ## 角色系统
 
@@ -304,6 +314,9 @@ bash scripts/recruit.sh 3 false "安全审计专家"
 - **Typing 广播**：唤醒 Bot 时调用 Hub `/api/typing`，客户端显示"xxx 正在处理..."
 - **频道隔离**：`#general` 只唤醒 Boss，项目频道唤醒对应角色
 - **崩溃恢复**：检测 Bot tmux 窗口中 claude 进程是否存活，崩溃后自动重启 + 15s 后唤醒恢复上下文（restart_bot 在 role_name 缺失时回退到 bot_id，兼容无 frontmatter 的 boss）
+- **唤醒冷却**：同一 Bot 30 秒内不重复唤醒，避免消息排队卡住
+- **卡住检测**：发现 Claude Code "queued messages" 状态时自动按 Enter 解除
+- **处理中识别**：识别 Running/Thinking/Brewing 等活跃状态，不打断正在工作的 Bot
 - **重启冷却**：60 秒内不重复重启同一 Bot
 - **日志输出**：同时写入终端和 `data/logs/monitor-YYYY-MM-DD.log`
 
@@ -325,6 +338,23 @@ grep '"ERROR"' data/logs/*.log                       # 所有错误
 cat data/logs/mcp-boss-*.log                         # Boss 的活动
 grep '"cat":"msg"' data/logs/hub-*.log               # 消息流
 ```
+
+## 性能追踪
+
+Hub 自动追踪两类性能指标：
+
+- **响应耗时**：从 @mention 到被 mention 的 bot 回复的时间
+- **任务耗时**：从 Lead 分配任务到角色报告完成的时间
+
+```bash
+# 查看今日性能数据
+grep '"perf"' data/logs/hub-$(date +%Y-%m-%d).log
+
+# API 查看（手机可访问）
+curl http://127.0.0.1:7800/api/perf
+```
+
+Monitor 也记录唤醒到回复的耗时：`grep "PERF" data/logs/monitor-*.log`
 
 ## Worker 派发
 
